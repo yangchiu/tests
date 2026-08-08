@@ -292,8 +292,14 @@ def host_shell(request):
             if not self.client:
                 cli = SSHClient()
                 cli.set_missing_host_key_policy(MissingHostKeyPolicy())
+                print(f"host login ==>")
+                print(f"ipaddr = {ipaddr}")
                 kws = dict(username=self.username, password=self.password, pkey=self.pkey)
                 kws.update(kwargs)
+                print(f"username = {self.username}")
+                print(f"password = {self.password}")
+                print(f"pkey = {self.pkey}")
+                print(f"pkey string = {request.config.getoption('--host-private-key')}")
 
                 # in case we're using a password to log into the host, this
                 # prevents paramiko from getting confused by ssh keys in the ssh

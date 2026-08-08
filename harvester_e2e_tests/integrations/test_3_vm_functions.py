@@ -806,6 +806,9 @@ class TestVMResource:
     ):
         unique_vm_name, ssh_user = stopped_vm
         pub_key, pri_key = ssh_keypair
+        print(f"ssh_keypair ==>")
+        print(f"pub_key = {pub_key}")
+        print(f"pri_key = {pri_key}")
 
         code, data = api_client.vms.start(unique_vm_name)
         assert 204 == code, (code, data)
@@ -822,6 +825,11 @@ class TestVMResource:
         code, data = api_client.hosts.get(data['status']['nodeName'])
         host_ip = next(addr['address'] for addr in data['status']['addresses']
                        if addr['type'] == 'InternalIP')
+        print(f"vm_shell_from_host ==>")
+        print(f"host_ip = {host_ip}")
+        print(f"vm_ip = {vm_ip}")
+        print(f"ssh_user = {ssh_user}")
+        print(f"pri_key = {pri_key}")
         with vm_shell_from_host(host_ip, vm_ip, ssh_user, pkey=pri_key) as sh:
             cloud_inited, (out, err) = vm_checker.wait_cloudinit_done(sh)
             assert cloud_inited, (

@@ -98,6 +98,10 @@ def vm_shell_from_host(vm_shell, host_shell, wait_timeout):
         host_ip, vm_ip, username, password=None, pkey=None, wait_timeout=wait_timeout
     ):
         with host_shell.login(host_ip, jumphost=True) as h:
+            print(f"vm_shell ==>")
+            print(f"username = {username}")
+            print(f"password = {password}")
+            print(f"pkey = {pkey}")
             vm_sh = vm_shell(username, password, pkey)
             endtime = datetime.now() + timedelta(seconds=wait_timeout)
             while endtime > datetime.now():
