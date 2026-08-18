@@ -218,6 +218,18 @@ class Rest(Base):
     def cleanup_vlan_networks(self):
         pass
 
+    def list_vlan_networks(self):
+        """List all VLAN network attachment definitions"""
+        logging("Listing VLAN networks")
+        code, data = self.harvester_api.get(
+            "v1/k8s.cni.cncf.io.network-attachment-definitions"
+        )
+        if code != 200:
+            raise Exception(
+                f"Failed to list VLAN networks: {code}, {data}"
+            )
+        return data.get("data", [])
+
     # IP Pool Operations
     def get_ip_pool(self, name):
         """Get IP pool by name, returns None if not found"""

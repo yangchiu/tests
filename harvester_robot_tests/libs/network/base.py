@@ -102,6 +102,15 @@ class Base(ABC):
     def cleanup_vlan_networks(self):
         pass
 
+    @abstractmethod
+    def list_vlan_networks(self):
+        """List all VLAN network attachment definitions.
+
+        Returns:
+            list[dict]: VLAN network (NAD) objects
+        """
+        pass
+
     # IP Pool Operations
     @abstractmethod
     def get_ip_pool(self, name):

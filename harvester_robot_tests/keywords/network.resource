@@ -79,6 +79,18 @@ Delete VLAN Network
     Log    Deleting VLAN network: ${name}
     network_keywords.delete_vlan_network    ${name}
 
+Get Available VLAN ID
+    [Arguments]    @{exclude_ids}
+    [Documentation]    Find a VLAN ID (2-4094) not currently used by any
+    ...               existing VLAN network. Useful for negative tests
+    ...               needing a VLAN with no DHCP (e.g. bogus VLAN tests).
+    ...               Args:
+    ...                   exclude_ids: optional extra VLAN IDs to exclude
+    ...               Returns:
+    ...                   int: an available VLAN ID
+    ${vlan_id}=    network_keywords.get_available_vlan_id    ${exclude_ids}
+    RETURN    ${vlan_id}
+
 # IP Pool Operations
 Get IP Pool
     [Arguments]    ${name}

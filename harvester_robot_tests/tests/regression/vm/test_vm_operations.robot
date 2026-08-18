@@ -57,6 +57,10 @@ Soft-Reboot VM
     ${new_probe_time}=    Set Variable    ${new_condition}[lastProbeTime]
     VM should be running    ${VM_NAME}
     Agent probe time should be updated    ${old_probe_time}    ${new_probe_time}
+    FOR    ${i}    IN RANGE    3000
+        Log To Console    sleep ${i}
+        Sleep    1s
+    END
 
 Delete VM
     [Tags]    p0

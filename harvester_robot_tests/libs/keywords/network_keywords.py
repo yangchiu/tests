@@ -117,6 +117,30 @@ class network_keywords:
         logging(f"Deleting VLAN network: {name}")
         self.network.delete_vlan_network(name)
 
+    def list_vlan_networks(self):
+        """
+        List all VLAN network attachment definitions.
+
+        Returns:
+            list[dict]: VLAN network (NAD) objects
+        """
+        logging("Listing VLAN networks")
+        return self.network.list_vlan_networks()
+
+    def get_available_vlan_id(self, exclude_ids=None):
+        """
+        Find a VLAN ID (2-4094) not currently used by any existing VLAN
+        network. Useful for negative tests needing a VLAN with no DHCP.
+
+        Args:
+            exclude_ids: optional iterable of additional VLAN IDs to exclude
+
+        Returns:
+            int: an available VLAN ID
+        """
+        logging(f"Finding an available VLAN ID (excluding: {exclude_ids})")
+        return self.network.get_available_vlan_id(exclude_ids)
+
     # IP Pool Operations
     def get_ip_pool(self, name):
         """

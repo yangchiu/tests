@@ -38,6 +38,15 @@ class Rest(Base):
                         level="WARNING")
             vm_spec.add_image("disk-0", image_id, image_uid=image_uid)
 
+        extra_networks = kwargs.get("networks", [])
+        if extra_networks:
+            if not isinstance(extra_networks, list):
+                raise Exception(
+                    "networks must be a list of dicts with 'name' and 'network_name'"
+                )
+            for net in extra_networks:
+                vm_spec.add_network(net["name"], net["network_name"])
+
         code, data = api.vms.create(vm_name, vm_spec)
         assert code == 201, f"Failed to create VM: {code}, {data}"
         return data
@@ -83,36 +92,6 @@ class Rest(Base):
         """Negative-test helper. Only implemented for the CRD strategy."""
         raise NotImplementedError(
             "try_delete is only implemented for the CRD strategy; "
-            "run with HARVESTER_OPERATION_STRATEGY=crd")
-
-    def add_volume(self, vm_name, disk_name, volume_name):
-        """Hot-plug a volume. Only implemented for the CRD strategy."""
-        raise NotImplementedError(
-            "add_volume is only implemented for the CRD strategy; "
-            "run with HARVESTER_OPERATION_STRATEGY=crd")
-
-    def remove_volume(self, vm_name, disk_name):
-        """Hot-unplug a volume. Only implemented for the CRD strategy."""
-        raise NotImplementedError(
-            "remove_volume is only implemented for the CRD strategy; "
-            "run with HARVESTER_OPERATION_STRATEGY=crd")
-
-    def wait_for_volume_hotplugged(self, vm_name, disk_name, timeout):
-        """Only implemented for the CRD strategy."""
-        raise NotImplementedError(
-            "wait_for_volume_hotplugged is only implemented for the CRD strategy; "
-            "run with HARVESTER_OPERATION_STRATEGY=crd")
-
-    def wait_for_volume_unplugged(self, vm_name, disk_name, timeout):
-        """Only implemented for the CRD strategy."""
-        raise NotImplementedError(
-            "wait_for_volume_unplugged is only implemented for the CRD strategy; "
-            "run with HARVESTER_OPERATION_STRATEGY=crd")
-
-    def get_disk_names(self, vm_name):
-        """Only implemented for the CRD strategy."""
-        raise NotImplementedError(
-            "get_disk_names is only implemented for the CRD strategy; "
             "run with HARVESTER_OPERATION_STRATEGY=crd")
 
     def start(self, vm_name):
@@ -249,6 +228,13 @@ class Rest(Base):
         code, data = api.vms.get_status(vm_name)
         assert code == 200, f"Failed to get VM status: {code}, {data}"
         return data
+
+    def get_interfaces(self, vm_name):
+        """Return the VM's status.interfaces list (mac, name, ipAddress, ...)."""
+        api = get_harvester_api_client()
+        code, data = api.vms.get_status(vm_name)
+        assert code == 200, f"Failed to get VM status: {code}, {data}"
+        return data.get('status', {}).get('interfaces', [])
 
     def wait_for_ip_addresses(self, vm_name, networks, timeout):
         """Wait for VM to get IP addresses"""

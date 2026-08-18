@@ -2,6 +2,7 @@
 Documentation    VM Keywords
 Resource         variables.resource
 Resource         common.resource
+Library          Collections
 Library          ../libs/keywords/vm_keywords.py
 
 *** Keywords ***
@@ -176,3 +177,36 @@ Update Volume Size to ${new_size}Gi From VM
     [Arguments]    ${vm_name}    ${disk_name}
     [Documentation]    Update the size of a VM disk
     vm_keywords.update_vm_disk_size    ${vm_name}    ${disk_name}    ${new_size}Gi
+
+Get VM Interfaces
+    [Arguments]    ${vm_name}
+    [Documentation]    Return the running VM's status.interfaces list
+    ...    (each entry may contain name, mac, ipAddress, infoSource, ...)
+    ${interfaces}=    vm_keywords.get_vm_interfaces    ${vm_name}
+    RETURN    ${interfaces}
+
+Get VM Interface By Name
+    [Arguments]    ${vm_name}    ${interface_name}
+    [Documentation]    Return a single interface dict from the VM's status
+    ...    matching the given interface (network) name. Fails if not found.
+    ${interfaces}=    Get VM Interfaces    ${vm_name}
+    FOR    ${iface}    IN    @{interfaces}
+        IF    '${iface}[name]' == '${interface_name}'
+            RETURN    ${iface}
+        END
+    END
+    Fail    Interface '${interface_name}' not found on VM ${vm_name}
+
+VM Interface Should Have No IP Address
+    [Arguments]    ${vm_name}    ${interface_name}
+    [Documentation]    Assert the given interface (e.g. attached to a VLAN
+    ...    network with no DHCP) has a MAC but no IP address assigned.
+    ${iface}=    Get VM Interface By Name    ${vm_name}    ${interface_name}
+    Should Not Be Empty    ${iface}[mac]
+    ...    Interface '${interface_name}' on VM ${vm_name} has no MAC address
+    Dictionary Should Not Contain Key    ${iface}    ipAddress
+    ...    Interface '${interface_name}' on VM ${vm_name} unexpectedly has an IP address
+    Dictionary Should Not Contain Key    ${iface}    ipAddresses
+    ...    Interface '${interface_name}' on VM ${vm_name} unexpectedly has IP addresses
+
+

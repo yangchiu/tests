@@ -64,6 +64,11 @@ class Base(ABC):
         pass
 
     @abstractmethod
+    def get_interfaces(self, vm_name):
+        """Return the VM's network interfaces status (mac, name, ipAddress, ...)"""
+        pass
+
+    @abstractmethod
     def cleanup(self):
         """Clean up test resources"""
         pass

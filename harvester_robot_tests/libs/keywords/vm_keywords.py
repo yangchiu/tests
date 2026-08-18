@@ -139,6 +139,12 @@ class vm_keywords:
         logging(f'Waiting for VM {vm_name} to be running')
         self.vm.wait_for_running(vm_name, timeout)
 
+    def get_vm_interfaces(self, vm_name):
+        """Return the VM's status.interfaces list (mac, name, ipAddress, ...)"""
+        logging(f'Getting interfaces for VM {vm_name}')
+        return self.vm.get_interfaces(vm_name)
+
+
     def wait_for_vm_stopped(self, vm_name, timeout=DEFAULT_TIMEOUT):
         """Wait for VM to stop"""
         logging(f'Waiting for VM {vm_name} to be stopped')

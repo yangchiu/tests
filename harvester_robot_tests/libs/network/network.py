@@ -7,6 +7,7 @@ environment variable. Valid values are 'crd' or 'rest'. Defaults to 'crd' if not
 """
 
 import os
+import json
 from constant import HarvesterOperationStrategy
 from network.rest import Rest
 from network.crd import CRD
@@ -79,6 +80,40 @@ class Network(Base):
 
     def cleanup_vlan_networks(self):
         return self.network.cleanup_vlan_networks()
+
+    def list_vlan_networks(self):
+        """List all VLAN network attachment definitions"""
+        return self.network.list_vlan_networks()
+
+    def get_available_vlan_id(self, exclude_ids=None):
+        """Find a VLAN ID (2-4094) not currently used by any existing VLAN
+        network. Useful for negative tests that need a VLAN with no DHCP
+        (i.e. one that isn't backed by a real, configured VLAN).
+
+        Args:
+            exclude_ids: optional iterable of additional VLAN IDs to exclude
+
+        Returns:
+            int: an available VLAN ID
+        """
+        exclude = {int(v) for v in (exclude_ids or []) if v not in (None, "")}
+        exclude.add(1)  # VLAN 1 is reserved/native
+
+        for net in self.list_vlan_networks():
+            config_raw = net.get("spec", {}).get("config", "{}")
+            try:
+                config = json.loads(config_raw)
+            except (TypeError, ValueError):
+                config = {}
+            vlan = config.get("vlan")
+            if vlan:
+                exclude.add(int(vlan))
+
+        for vlan_id in range(2, 4095):
+            if vlan_id not in exclude:
+                return vlan_id
+
+        raise Exception("No available VLAN ID found (all of 2-4094 are in use)")
 
     # IP Pool Operations
     def get_ip_pool(self, name):

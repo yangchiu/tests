@@ -94,6 +94,9 @@ class VM(Base):
     def get_status(self, vm_name):
         return self.vm.get_status(vm_name)
 
+    def get_interfaces(self, vm_name):
+        return self.vm.get_interfaces(vm_name)
+
     def wait_for_ip_addresses(self, vm_name, networks, timeout):
         return self.vm.wait_for_ip_addresses(vm_name, networks, timeout)
 

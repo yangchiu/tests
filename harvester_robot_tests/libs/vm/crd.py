@@ -210,6 +210,34 @@ class CRD(Base):
         logging(f"Volume claim templates for VM {vm_name}: {volume_claim_templates}")
         logging(f"Volume spec_devices_disks for VM {vm_name}: {spec_devices_disks}")
 
+        # Extra (multus/bridge) network interfaces, e.g. VLAN networks.
+        # networks: optional list of dicts passed via kwargs, each dict must contain:
+        #     - name: interface name (must be unique, != 'default')
+        #     - network_name: NAD reference, "<namespace>/<name>"
+        # Example:
+        #     networks=[{"name": "no-dhcp", "network_name": "default/bogus-net-123"}]
+        spec_devices_interfaces = [
+            {"masquerade": {}, "model": "virtio", "name": "default"}
+        ]
+        spec_networks = [
+            {"name": "default", "pod": {}}
+        ]
+        extra_networks = kwargs.get("networks", [])
+        if extra_networks:
+            if not isinstance(extra_networks, list):
+                raise Exception(
+                    "networks must be a list of dicts with 'name' and 'network_name'"
+                )
+            for net in extra_networks:
+                iface_name = net["name"]
+                spec_devices_interfaces.append(
+                    {"bridge": {}, "model": "virtio", "name": iface_name}
+                )
+                spec_networks.append(
+                    {"name": iface_name,
+                     "multus": {"networkName": net["network_name"]}}
+                )
+
         # Build complete VM spec matching Harvester structure
         body = {
             "apiVersion": f"{KUBEVIRT_API_GROUP}/{KUBEVIRT_API_VERSION}",
@@ -259,13 +287,7 @@ class CRD(Base):
                                         "type": "tablet"
                                     }
                                 ],
-                                "interfaces": [
-                                    {
-                                        "masquerade": {},
-                                        "model": "virtio",
-                                        "name": "default"
-                                    }
-                                ]
+                                "interfaces": spec_devices_interfaces
                             },
                             "features": {
                                 "acpi": {"enabled": True}
@@ -287,9 +309,7 @@ class CRD(Base):
                         },
                         "evictionStrategy": "LiveMigrateIfPossible",
                         "hostname": vm_name,
-                        "networks": [
-                            {"name": "default", "pod": {}}
-                        ],
+                        "networks": spec_networks,
                         "volumes": spec_volumes,
                         "terminationGracePeriodSeconds": 120
                     }
@@ -829,6 +849,17 @@ class CRD(Base):
             'runStrategy': vm.get('spec', {}).get('runStrategy', 'Unknown'),
             'conditions': vm.get('status', {}).get('conditions', [])
         }
+
+    def get_interfaces(self, vm_name, namespace=DEFAULT_NAMESPACE):
+        """Return the VMI's status.interfaces list (mac, name, ipAddress, ...)."""
+        vmi = self.obj_api.get_namespaced_custom_object(
+            group=KUBEVIRT_API_GROUP,
+            version=KUBEVIRT_API_VERSION,
+            namespace=namespace,
+            plural=VIRTUALMACHINEINSTANCE_PLURAL,
+            name=vm_name
+        )
+        return vmi.get('status', {}).get('interfaces', [])
 
     def wait_for_ip_addresses(
             self, vm_name, networks=None, timeout=DEFAULT_TIMEOUT_SHORT,
